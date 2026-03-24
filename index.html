@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MapQuest Route Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#2e7d32;
+  --border:#e0e0e0;
+  --bg:#f4f6f9;
+}
+
+body{font-family:'Poppins',sans-serif;background:var(--bg);margin:0}
+
+.header{
+  background:#2e7d32;
+  color:#fff;
+  padding:15px;
+  text-align:center;
+  font-weight:600;
+}
+
+.container{
+  max-width:900px;
+  margin:30px auto;
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Make input font same as table */
+input{
+  width:95%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:14px;
+  height:36px;
+  margin:0 auto;
+  display:block;
+}
+
+td, th{
+  font-size:14px;
+}
+
+.form-group{
+  margin-bottom:15px;
+  padding:0 10px;
+}
+label{font-weight:600;display:block;margin-bottom:5px}
+input{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:6px;
+}
+
+.helper-text{
+  font-size:12px;
+  color:#666;
+  margin-top:3px;
+}
+
+.button-group{display:flex;gap:10px;margin-top:10px}
+button{flex:1;padding:10px;border:none;border-radius:6px;cursor:pointer}
+button.primary{background:#2e7d32;color:#fff}
+button.secondary{background:#ccc}
+
+.table-card{
+  margin-top:25px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+}
+
+.table-title{
+  text-align:center;
+  font-weight:600;
+  padding:10px;
+  border-bottom:1px solid var(--border);
+}
+
+.table-container{overflow-x:auto}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td{
+  border:1px solid var(--border);
+  padding:10px;
+  text-align:left;
+}
+
+th{
+  background:#f5f5f5;
+}
+
+.hidden{display:none}
+
+@media(max-width:600px){
+.container{margin:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">MapQuest Route Finder (Global)</div>
+
+<div class="container">
+
+<div class="form-group">
+<label>Starting Location</label>
+<input type="text" id="from" >
+
+</div>
+
+<div class="form-group">
+<label>Destination</label>
+<input type="text" id="to" >
+
+</div>
+
+<div class="button-group">
+<button class="primary" onclick="getRoute()">Get Route</button>
+<button class="secondary" onclick="resetForm()">New Search</button>
+</div>
+
+<div class="table-card hidden" id="tableCard">
+  <div class="table-title">Route Details</div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+const API_KEY="lIUtaosIcdlapN3Mx42v63YgPvLVpriZ";
+
+async function getRoute(){
+const from=document.getElementById('from').value.trim();
+const to=document.getElementById('to').value.trim();
+
+if(!from||!to){alert("Please enter both locations");return}
+
+const url=`https://www.mapquestapi.com/directions/v2/route?key=${API_KEY}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+
+try{
+const res=await fetch(url);
+const data=await res.json();
+
+if(data.info && data.info.statuscode!==0){
+alert("Route not found. Make sure locations are valid and connected by land.");
+return;
+}
+
+const route=data.route;
+if(!route){alert("No route data");return}
+
+const body=document.getElementById('resultBody');
+body.innerHTML="";
+
+// INPUTS
+[["Starting Location", from],["Destination", to]].forEach(r=>{
+let tr=document.createElement('tr');
+tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td>`;
+body.appendChild(tr);
+});
+
+// ALL API RAW OUTPUTS
+for(const key in route){
+if(typeof route[key] !== 'object'){
+let tr=document.createElement('tr');
+tr.innerHTML=`<td>${formatLabel(key)}</td><td>${route[key]}</td>`;
+body.appendChild(tr);
+}
+}
+
+// SHOW TABLE
+document.getElementById('tableCard').classList.remove('hidden');
+
+}catch(e){console.error(e);alert("Error fetching data")}
+}
+
+function formatLabel(key){
+return key.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase());
+}
+
+function resetForm(){
+document.getElementById('from').value='';
+document.getElementById('to').value='';
+document.getElementById('tableCard').classList.add('hidden');
+}
+</script>
+
+</body>
+</html>
